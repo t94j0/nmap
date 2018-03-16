@@ -18,8 +18,8 @@ type Hostname struct {
 	Type string
 }
 
-// cleanHost is used to conver from the RawHost format to a more usable format
-func (host RawHost) cleanHost() Host {
+// cleanHost is used to conver from the rawHost format to a more usable format
+func (host rawHost) cleanHost() Host {
 	output := Host{
 		host.Status.State,
 		host.Address.Address,
@@ -63,7 +63,7 @@ func (host *Host) Rescan() (*Host, error) {
 	opts := []string{}
 
 	for _, port := range host.Ports {
-		ports = append(ports, port.Id)
+		ports = append(ports, int(port.Id))
 	}
 
 	scan, err := RunScan(hosts, ports, opts)
@@ -71,7 +71,7 @@ func (host *Host) Rescan() (*Host, error) {
 		return nil, err
 	}
 
-	return scan, nil
+	return &scan.Hosts[0], nil
 }
 
 // RescanWithOptions allows the user to rescan while adding extra NMap option
@@ -79,10 +79,9 @@ func (host *Host) Rescan() (*Host, error) {
 func (host *Host) RescanWithOptions(opts []string) (*Host, error) {
 	hosts := []string{host.Address}
 	ports := []int{}
-	opts := []string{}
 
 	for _, port := range host.Ports {
-		ports = append(ports, port.Id)
+		ports = append(ports, int(port.Id))
 	}
 
 	scan, err := RunScan(hosts, ports, opts)
@@ -90,7 +89,7 @@ func (host *Host) RescanWithOptions(opts []string) (*Host, error) {
 		return nil, err
 	}
 
-	return scan, nil
+	return &scan.Hosts[0], nil
 }
 
 // Diff gets the difference between the the target host and the argument host.

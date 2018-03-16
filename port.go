@@ -18,7 +18,7 @@ type Element struct {
 	Value string
 }
 
-func (port RawPort) cleanPort() Port {
+func (port rawPort) cleanPort() Port {
 	output := Port{
 		port.Protocol,
 		port.Port,

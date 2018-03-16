@@ -13,7 +13,7 @@ type Scan struct {
 	Hosts       []Host
 }
 
-func (scan RawScan) cleanScan() Scan {
+func (scan rawScan) cleanScan() Scan {
 	output := Scan{scan.DisplayArgs, []Host{}}
 	for _, host := range scan.Hosts {
 		output.Hosts = append(output.Hosts, host.cleanHost())
@@ -27,11 +27,15 @@ func RunScan(hosts []string, ports []int, opts []string) (*Scan, error) {
 	args := []string{"-oX", "-"}
 
 	portList := ""
-	for _, port := range ports {
-		portList += strconv.Itoa(port) + ","
+	if len(ports) != 0 {
+		for _, port := range ports {
+			portList += strconv.Itoa(port) + ","
+		}
 	}
 	args = append(args, opts...)
-	args = append(args, "-p", portList)
+	if portList != "" {
+		args = append(args, "-p", portList)
+	}
 	args = append(args, hosts...)
 
 	// Find path for nmap binary
@@ -86,4 +90,32 @@ func RunScan(hosts []string, ports []int, opts []string) (*Scan, error) {
 	hostScan := rawScan.cleanScan()
 
 	return &hostScan, nil
+}
+
+// Rescan will rescan all hosts in the Scan
+func (s *Scan) Rescan() (*Scan, error) {
+	newScan := new(Scan)
+	for _, host := range s.Hosts {
+		host, err := host.Rescan()
+		if err != nil {
+			return nil, err
+		}
+		newScan.Hosts = append(newScan.Hosts, *host)
+	}
+
+	return newScan, nil
+}
+
+// RescanWithOptions will rescan all hosts in the Scan
+func (s *Scan) RescanWithOptions(opts []string) (*Scan, error) {
+	newScan := new(Scan)
+	for _, host := range s.Hosts {
+		host, err := host.RescanWithOptions(opts)
+		if err != nil {
+			return nil, err
+		}
+		newScan.Hosts = append(newScan.Hosts, *host)
+	}
+
+	return newScan, nil
 }
