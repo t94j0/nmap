@@ -55,6 +55,44 @@ func (s *Scan) GetHost(hostTarget string) Host {
 	return Host{}
 }
 
+// Rescan the target. Normally used for finding differences between scans
+// at two points in time.
+func (host *Host) Rescan() (*Host, error) {
+	hosts := []string{host.Address}
+	ports := []int{}
+	opts := []string{}
+
+	for _, port := range host.Ports {
+		ports = append(ports, port.Id)
+	}
+
+	scan, err := RunScan(hosts, ports, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return scan, nil
+}
+
+// RescanWithOptions allows the user to rescan while adding extra NMap option
+// flags
+func (host *Host) RescanWithOptions(opts []string) (*Host, error) {
+	hosts := []string{host.Address}
+	ports := []int{}
+	opts := []string{}
+
+	for _, port := range host.Ports {
+		ports = append(ports, port.Id)
+	}
+
+	scan, err := RunScan(hosts, ports, opts)
+	if err != nil {
+		return nil, err
+	}
+
+	return scan, nil
+}
+
 // Diff gets the difference between the the target host and the argument host.
 //The first returned value is the added ports and the second returned value is
 // the removed ports.
