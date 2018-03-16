@@ -1,1 +1,3 @@
-# nmap
+# NMap library for Go
+
+Because there's no good Golang nmap wrapper...
