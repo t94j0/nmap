@@ -1,8 +1,9 @@
 package nmap
 
 // Host declares host information
-// ex: Host{up, 10.0.0.1, ipv4, ...}
 type Host struct {
+	parentScan *Scan
+
 	State       string
 	Address     string
 	AddressType string
@@ -21,6 +22,7 @@ type Hostname struct {
 // cleanHost is used to conver from the rawHost format to a more usable format
 func (host rawHost) cleanHost() Host {
 	output := Host{
+		nil,
 		host.Status.State,
 		host.Address.Address,
 		host.Address.AddressType,
@@ -40,7 +42,7 @@ func (host rawHost) cleanHost() Host {
 }
 
 // GetHost will get a specified host by either hostname or ip
-func (s *Scan) GetHost(hostTarget string) Host {
+func (s Scan) GetHost(hostTarget string) Host {
 	for _, host := range s.Hosts {
 		if host.Address == hostTarget {
 			return host
@@ -57,46 +59,20 @@ func (s *Scan) GetHost(hostTarget string) Host {
 
 // Rescan the target. Normally used for finding differences between scans
 // at two points in time.
-func (host *Host) Rescan() (*Host, error) {
-	hosts := []string{host.Address}
-	ports := []int{}
-	opts := []string{}
+func (host Host) Rescan() Scan {
+	newScan := Init().
+		AddPorts(host.parentScan.configPorts...).
+		AddHost(host.Address).
+		AddFlags(host.parentScan.configOpts...)
 
-	for _, port := range host.Ports {
-		ports = append(ports, int(port.Id))
-	}
-
-	scan, err := RunScan(hosts, ports, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return &scan.Hosts[0], nil
-}
-
-// RescanWithOptions allows the user to rescan while adding extra NMap option
-// flags
-func (host *Host) RescanWithOptions(opts []string) (*Host, error) {
-	hosts := []string{host.Address}
-	ports := []int{}
-
-	for _, port := range host.Ports {
-		ports = append(ports, int(port.Id))
-	}
-
-	scan, err := RunScan(hosts, ports, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	return &scan.Hosts[0], nil
+	return newScan
 }
 
 // Diff gets the difference between the the target host and the argument host.
 //The first returned value is the added ports and the second returned value is
 // the removed ports.
 // TODO: Make the logic a bit better
-func (h *Host) Diff(altHost Host) ([]Port, []Port) {
+func (h Host) Diff(altHost Host) ([]Port, []Port) {
 	var addedPorts []Port
 	var removedPorts []Port
 
