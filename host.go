@@ -1,5 +1,10 @@
 package nmap
 
+import (
+	"fmt"
+	"strings"
+)
+
 // Host declares host information
 type Host struct {
 	parentScan *Scan
@@ -12,8 +17,6 @@ type Host struct {
 }
 
 // Hostname declares the hostname and type
-// ex: Hostname{maxh.io, PTR}
-// ex: Hostname{maxh.io, user}
 type Hostname struct {
 	Name string
 	Type string
@@ -119,4 +122,26 @@ func (h Host) Diff(altHost Host) ([]Port, []Port) {
 	}
 
 	return addedPorts, removedPorts
+}
+
+// ToString converts the host into a nicely formatted string
+func (h Host) ToString() (out string) {
+	out += fmt.Sprintf("%s is %s\n", h.Address, h.State)
+	if len(h.Hostnames) != 0 {
+		out += "Hostnames:\n"
+		for _, hostname := range h.Hostnames {
+			out += fmt.Sprintf("  %s/%s\n", hostname.Name, hostname.Type)
+		}
+	}
+	if len(h.Ports) != 0 {
+		out += "Ports:\n"
+		for _, port := range h.Ports {
+			for _, line := range strings.Split(port.ToString(), "\n") {
+				if line != "" {
+					out += fmt.Sprintf("  %s\n", line)
+				}
+			}
+		}
+	}
+	return
 }

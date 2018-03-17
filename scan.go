@@ -192,3 +192,10 @@ func (s Scan) Run() (Scan, error) {
 
 	return scan, nil
 }
+
+func (s Scan) ToString() (out string) {
+	for _, host := range s.Hosts {
+		out += fmt.Sprintf("%s\n", host.ToString())
+	}
+	return
+}

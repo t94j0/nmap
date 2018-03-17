@@ -1,5 +1,7 @@
 package nmap
 
+import "fmt"
+
 type Port struct {
 	Protocol string
 	Id       uint32
@@ -35,4 +37,12 @@ func (port rawPort) cleanPort() Port {
 	}
 
 	return output
+}
+
+func (p Port) ToString() (out string) {
+	out += fmt.Sprintf("Port %d/%s is %s\n", p.Id, p.Protocol, p.State)
+	for _, script := range p.Scripts {
+		out += fmt.Sprintf("  Script: %s\nOutput: %s\n", script.Name, script.Output)
+	}
+	return
 }
