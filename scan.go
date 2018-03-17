@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// Scan holds one nmap scan. It can be rescanned, diff'ed, and parsed for hosts
 type Scan struct {
 	DisplayArgs string
 	Hosts       []Host
@@ -22,6 +23,7 @@ func (scan rawScan) cleanScan() Scan {
 	return output
 }
 
+// RunScan is used to scan hosts with a list of hosts, ports, and nmap flags
 func RunScan(hosts []string, ports []int, opts []string) (*Scan, error) {
 	// Parse arguments
 	args := []string{"-oX", "-"}
