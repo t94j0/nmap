@@ -6,7 +6,7 @@ import (
 	"github.com/t94j0/nmap"
 )
 
-func ExampleGetHost() {
+func ExampleScan_GetHost() {
 	// All online hosts are added to the `scan` object
 	scan, _ := nmap.Init().AddPorts(80).AddHosts("example.com").Run()
 	// GetHost allows you to select one host from the list
@@ -17,7 +17,7 @@ func ExampleGetHost() {
 	fmt.Println(targetHost.ToString())
 }
 
-func ExampleRun() {
+func ExampleScan_Run() {
 	scan, _ := nmap.Init().
 		AddHosts("maxh.io", "192.168.0.1").
 		AddPorts(80, 445).

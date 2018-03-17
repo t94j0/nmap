@@ -7,7 +7,7 @@ import (
 	"github.com/t94j0/nmap"
 )
 
-func ExampleDiff() {
+func ExampleHost_Diff() {
 	// Scan maxh.io one
 	scan, _ := nmap.Init().AddHosts("maxh.io").Run()
 	firstHost, _ := scan.GetHost("maxh.io")
