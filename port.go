@@ -8,8 +8,8 @@ import (
 // Port represents nmap port information
 type Port struct {
 	Protocol string
-	// Id is the port number
-	Id      uint32
+	// ID is the port number
+	ID      uint32
 	State   string
 	Scripts []Script
 }
@@ -21,7 +21,7 @@ type Script struct {
 	Elements []Element
 }
 
-// Elements are returned from NSE scripts
+// Element are returned from NSE scripts
 type Element struct {
 	Key   string
 	Value string
@@ -48,7 +48,7 @@ func (port rawPort) cleanPort() Port {
 
 // ToString returns port information in a pretty-printed format
 func (p Port) ToString() (out string) {
-	out += fmt.Sprintf("Port %d/%s is %s\n", p.Id, p.Protocol, p.State)
+	out += fmt.Sprintf("Port %d/%s is %s\n", p.ID, p.Protocol, p.State)
 	for _, script := range p.Scripts {
 		output := ""
 		for _, line := range strings.Split(script.Output, "\n") {

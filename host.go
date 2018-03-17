@@ -66,11 +66,11 @@ func (s Scan) GetHost(hostTarget string) (Host, bool) {
 
 // Rescan the target. Normally used for finding differences between scans
 // at two points in time.
-func (host Host) Rescan() Scan {
+func (h Host) Rescan() Scan {
 	newScan := Init().
-		AddPorts(host.parentScan.configPorts...).
-		AddHost(host.Address).
-		AddFlags(host.parentScan.configOpts...)
+		AddPorts(h.parentScan.configPorts...).
+		AddHosts(h.Address).
+		AddFlags(h.parentScan.configOpts...)
 
 	return newScan
 }
@@ -100,10 +100,10 @@ func (h Host) Diff(altHost Host) ([]Port, []Port) {
 			continue
 		}
 		// Only works if ports are in sorted order
-		if targetPorts[i].Id < altPorts[j].Id {
+		if targetPorts[i].ID < altPorts[j].ID {
 			addedPorts = append(addedPorts, targetPorts[i])
 			i++
-		} else if targetPorts[i].Id > altPorts[j].Id {
+		} else if targetPorts[i].ID > altPorts[j].ID {
 			removedPorts = append(removedPorts, altPorts[j])
 			j++
 		} else {
