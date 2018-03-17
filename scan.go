@@ -129,7 +129,7 @@ func (s Scan) createNmapArgs() []string {
 // Run is used to scan hosts. The Scan object should be configured using
 // specified Add* Set* functions.
 //
-// BUG(scan): The scan will sometimes segfault and theres no reason why
+// BUG(t94j0): The scan will sometimes segfault and theres no reason why
 func (s Scan) Run() (Scan, error) {
 	if s.configErr != nil {
 		return s, s.configErr

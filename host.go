@@ -79,7 +79,7 @@ func (h Host) Rescan() Scan {
 //The first returned value is the added ports and the second returned value is
 // the removed ports.
 //
-// BUG(diff): Make the logic more clean
+// BUG(t94j0): Make the logic more clean
 func (h Host) Diff(altHost Host) ([]Port, []Port) {
 	var addedPorts []Port
 	var removedPorts []Port
