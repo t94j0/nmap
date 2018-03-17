@@ -1,20 +1,27 @@
 package nmap
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
+// Port represents nmap port information
 type Port struct {
 	Protocol string
-	Id       uint32
-	State    string
-	Scripts  []Script
+	// Id is the port number
+	Id      uint32
+	State   string
+	Scripts []Script
 }
 
+// Script are used for gathering nmap NSE script information
 type Script struct {
 	Name     string
 	Output   string
 	Elements []Element
 }
 
+// Elements are returned from NSE scripts
 type Element struct {
 	Key   string
 	Value string
@@ -39,10 +46,15 @@ func (port rawPort) cleanPort() Port {
 	return output
 }
 
+// ToString returns port information in a pretty-printed format
 func (p Port) ToString() (out string) {
 	out += fmt.Sprintf("Port %d/%s is %s\n", p.Id, p.Protocol, p.State)
 	for _, script := range p.Scripts {
-		out += fmt.Sprintf("  Script: %s\nOutput: %s\n", script.Name, script.Output)
+		output := ""
+		for _, line := range strings.Split(script.Output, "\n") {
+			output += fmt.Sprintf("      %s\n", line)
+		}
+		out += fmt.Sprintf("  Script: %s\n%s\n", script.Name, output)
 	}
 	return
 }

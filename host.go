@@ -44,20 +44,24 @@ func (host rawHost) cleanHost() Host {
 	return output
 }
 
-// GetHost will get a specified host by either hostname or ip
-func (s Scan) GetHost(hostTarget string) Host {
+// GetHost will get a specified host by either hostname or ip. The first
+// return value is the host, if it was found. The second return value is the
+// wether the host was found or not
+func (s Scan) GetHost(hostTarget string) (Host, bool) {
+	target, ok := s.Hosts[hostTarget]
+	if ok {
+		return target, true
+	}
+
 	for _, host := range s.Hosts {
-		if host.Address == hostTarget {
-			return host
-		}
 		for _, hostname := range host.Hostnames {
 			if hostname.Name == hostTarget {
-				return host
+				return host, true
 			}
 		}
 	}
 
-	return Host{}
+	return Host{}, false
 }
 
 // Rescan the target. Normally used for finding differences between scans
@@ -74,7 +78,8 @@ func (host Host) Rescan() Scan {
 // Diff gets the difference between the the target host and the argument host.
 //The first returned value is the added ports and the second returned value is
 // the removed ports.
-// TODO: Make the logic a bit better
+//
+// BUG(diff): Make the logic more clean
 func (h Host) Diff(altHost Host) ([]Port, []Port) {
 	var addedPorts []Port
 	var removedPorts []Port
