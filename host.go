@@ -47,7 +47,7 @@ func (host rawHost) cleanHost() Host {
 // GetHost will get a specified host by either hostname or ip. The first
 // return value is the host, if it was found. The second return value is the
 // wether the host was found or not
-func (s Scan) GetHost(hostTarget string) (Host, bool) {
+func (s Scan) GetHost(hostTarget string) (target Host, exists bool) {
 	target, ok := s.Hosts[hostTarget]
 	if ok {
 		return target, true
@@ -66,67 +66,51 @@ func (s Scan) GetHost(hostTarget string) (Host, bool) {
 
 // Rescan the target. Normally used for finding differences between scans
 // at two points in time.
-func (h Host) Rescan() Scan {
-	newScan := Init().
+func (h Host) Rescan() (scan Scan) {
+	return Init().
 		AddPorts(h.parentScan.configPorts...).
 		AddHosts(h.Address).
 		AddFlags(h.parentScan.configOpts...)
-
-	return newScan
 }
 
 // Diff gets the difference between the the target host and the argument host.
 //The first returned value is the added ports and the second returned value is
 // the removed ports.
 //
-// BUG(t94j0): Make the logic more clean
-func (h Host) Diff(altHost Host) ([]Port, []Port) {
-	var addedPorts []Port
-	var removedPorts []Port
-
+// BUG(t94j0): Make diff'ing more efficient. (O(2) right now)
+func (h Host) Diff(altHost Host) (added []Port, removed []Port) {
 	targetPorts := h.Ports
 	altPorts := altHost.Ports
 
-	i := 0
-	j := 0
-	for i < len(targetPorts) && j < len(altPorts) {
-		// Make sure we only check which ports are open
-		if targetPorts[i].State != "open" {
-			i++
-			continue
-		}
-		if altPorts[j].State != "open" {
-			j++
-			continue
-		}
-		// Only works if ports are in sorted order
-		if targetPorts[i].ID < altPorts[j].ID {
-			addedPorts = append(addedPorts, targetPorts[i])
-			i++
-		} else if targetPorts[i].ID > altPorts[j].ID {
-			removedPorts = append(removedPorts, altPorts[j])
-			j++
-		} else {
-			i++
-			j++
+	for _, altPort := range altPorts {
+		inTarget := false
+		for _, targetPort := range targetPorts {
+			if targetPort.ID == altPort.ID &&
+				targetPort.State == "open" && altPort.State == "open" {
+				inTarget = true
+			}
 		}
 
-		// Finish up
-		if i == len(targetPorts) && j != len(altPorts) {
-			for j < len(altPorts) {
-				removedPorts = append(removedPorts, altPorts[j])
-				j++
-			}
-		}
-		if j == len(altPorts) && i != len(targetPorts) {
-			for i < len(targetPorts) {
-				addedPorts = append(addedPorts, targetPorts[i])
-				i++
-			}
+		if !inTarget && altPort.State == "open" {
+			added = append(added, altPort)
 		}
 	}
 
-	return addedPorts, removedPorts
+	for _, targetPort := range targetPorts {
+		inAlt := false
+		for _, altPort := range altPorts {
+			if targetPort.ID == altPort.ID &&
+				targetPort.State == "open" && altPort.State == "open" {
+				inAlt = true
+			}
+		}
+
+		if !inAlt && targetPort.State == "open" {
+			removed = append(removed, targetPort)
+		}
+	}
+
+	return
 }
 
 // ToString converts the host into a nicely formatted string

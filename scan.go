@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
-	"strconv"
 	"strings"
 )
 
@@ -29,10 +28,12 @@ type Scan struct {
 	DisplayArgs string
 	Hosts       map[string]Host
 
-	configHosts []string
-	configPorts []uint16
-	configOpts  []string
-	configErr   error
+	configHosts    []string
+	configPorts    []uint16
+	configTCPPorts []uint16
+	configUDPPorts []uint16
+	configOpts     []string
+	configErr      error
 }
 
 func (scan rawScan) cleanScan(s Scan) Scan {
@@ -73,9 +74,46 @@ func (s Scan) AddPorts(ports ...uint16) Scan {
 	return s
 }
 
+// AddPortRange adds a list of ports where the first argument is the low bound
+// (inclusive) on the range and the second argument is the upper bound
+// (exclusive)
+//
+// E.x. AddPortRange(0, 1025) adds ports 1-1024 to the list
+// TODO(t94j0): Make into actual nmap ranges. (-p1-1024)
+func (s Scan) AddPortRange(lPort, hPort uint16) Scan {
+	for i := lPort; i < hPort; i++ {
+		s.configPorts = append(s.configPorts, i)
+	}
+	return s
+}
+
 // SetPorts sets the ports that wil be used
 func (s Scan) SetPorts(ports ...uint16) Scan {
 	s.configPorts = ports
+	return s
+}
+
+// AddTCPPorts adds TCP-only ports. Similar to using `-pT:<port1>,<port2>...`
+func (s Scan) AddTCPPorts(ports ...uint16) Scan {
+	s.configTCPPorts = append(s.configTCPPorts, ports...)
+	return s
+}
+
+// SetTCPPorts sets which TCP-only ports are used to scan
+func (s Scan) SetTCPPorts(ports ...uint16) Scan {
+	s.configTCPPorts = ports
+	return s
+}
+
+// AddUDPPorts adds UDP-only ports. Similar to using `-pU:<port1>,<port2>...`
+func (s Scan) AddUDPPorts(ports ...uint16) Scan {
+	s.configUDPPorts = append(s.configUDPPorts, ports...)
+	return s
+}
+
+// SetUDPPort sets which TCP-only ports are used to scan
+func (s Scan) SetUDPPorts(ports ...uint16) Scan {
+	s.configUDPPorts = ports
 	return s
 }
 
@@ -103,39 +141,49 @@ func (s Scan) AddFlags(flags ...string) Scan {
 	return s
 }
 
-func (s Scan) createNmapArgs() []string {
-	// Parse arguments
-	args := []string{"-oX", "-"}
+func (s Scan) SetFlags(flags ...string) Scan {
+	s.configOpts = []string{}
+	return s.AddFlags(flags...)
+}
 
-	portList := ""
-	if len(s.configPorts) != 0 {
-		for _, port := range s.configPorts {
-			portList += strconv.FormatUint(uint64(port), 10) + ","
-		}
-	}
+// Intense sets the options to use an "intense" scan. These are the same
+// options as used in Zenmap's intense scan.
+func (s Scan) Intense() Scan {
+	return s.SetFlags("-A", "-T4")
+}
 
-	args = append(args, s.configOpts...)
-	if portList != "" {
-		args = append(args, "-p", portList)
-	}
-	if len(s.configHosts) == 0 {
-		s.configErr = errors.New("No hosts added")
-	}
-	args = append(args, s.configHosts...)
+// IntenseAllTCPPorts does an intense scan, but adds all TCP ports
+func (s Scan) IntenseAllTCPPorts() Scan {
+	return s.Intense().
+		SetPorts().
+		SetUDPPorts().
+		SetTCPPorts().
+		AddPortRange(1, 65535)
+}
 
-	return args
+// Ping sets the `-sn` flag to only do a ping scan
+func (s Scan) Ping() Scan {
+	return s.SetFlags("-sn")
+}
+
+// Quick does a scan with timing at max and with the `-F` option
+func (s Scan) Quick() Scan {
+	return s.SetFlags("-T4", "-F")
 }
 
 // Run is used to scan hosts. The Scan object should be configured using
 // specified Add* Set* functions.
 //
 // BUG(t94j0): The scan will sometimes segfault and theres no reason why
-func (s Scan) Run() (Scan, error) {
+func (s Scan) Run() (output Scan, err error) {
 	if s.configErr != nil {
 		return s, s.configErr
 	}
 
-	args := s.createNmapArgs()
+	args, err := s.CreateNmapArgs()
+	if err != nil {
+		return s, err
+	}
 
 	// Find path for nmap binary
 	nmapPath, err := exec.LookPath("nmap")

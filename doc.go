@@ -2,8 +2,8 @@
 //
 // Why
 //
-// NMap is a great tool, but it's very hard to script when trying to use Go.
-// This project is meant to make life easier when trying to do network scanning
+// NMap is a great tool, but it's very hard to script when using Go.
+// This project is meant to make life easier when doing network scanning
 // in Go. The package is meant to be very easy to use, and extremely intuitive
 // to learn.
 //
