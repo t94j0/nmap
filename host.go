@@ -69,6 +69,8 @@ func (s Scan) GetHost(hostTarget string) (target Host, exists bool) {
 func (h Host) Rescan() (scan Scan) {
 	return Init().
 		AddPorts(h.parentScan.configPorts...).
+		AddTCPPorts(h.parentScan.configTCPPorts).
+		AddUDPPorts(h.parentScan.configUDPPorts).
 		AddHosts(h.Address).
 		AddFlags(h.parentScan.configOpts...)
 }
