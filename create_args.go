@@ -2,6 +2,7 @@ package nmap
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -36,17 +37,13 @@ func (s Scan) CreateNmapArgs() ([]string, error) {
 	// Check to make sure all TCP/UDP flags are correct
 	// Check TCP flags
 	tcpOptions := []string{"-sS", "-sT", "-sA", "-sW", "-sM"}
-	iflagI, err := array.Intersection(tcpOptions, s.configOpts)
-	if err != nil {
-		return []string{}, err
-	}
-	iflag := iflagI.([]string)
+	iflag := array.Intersection(tcpOptions, s.configOpts).([]string)
 	if len(iflag) == 0 {
-		s.configOpts = append(s.configOpts, tcpOptions[0])
+		s.configOpts = append(s.configOpts, tcpOptions[1])
 	}
 
 	// Check UDP flag
-	if !array.In("-sU", s.configOpts) {
+	if len(s.configUDPPorts) != 0 && !array.In("-sU", s.configOpts) {
 		s.configOpts = append(s.configOpts, "-sU")
 	}
 
@@ -63,6 +60,7 @@ func (s Scan) CreateNmapArgs() ([]string, error) {
 	}
 	args = append(args, s.configHosts...)
 
+	fmt.Println(args)
 	return args, nil
 }
 

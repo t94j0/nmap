@@ -26,4 +26,5 @@ func ExampleScan_Run() {
 
 func ExampleScan_Intense() {
 	scan, _ := Init().AddHosts("localhost").Intense().Run()
+	fmt.Println(scan.ToString())
 }

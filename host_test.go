@@ -158,5 +158,6 @@ func TestHost_Diff_state(t *testing.T) {
 	if len(removals) != 0 {
 		removed := portListToPortString(removals)
 		t.Errorf("Removals '%s' found\n", removed)
+		t.Errorf("additions: %v\nremovals: %v\n", additions, removals)
 	}
 }

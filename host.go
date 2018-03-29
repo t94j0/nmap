@@ -3,6 +3,8 @@ package nmap
 import (
 	"fmt"
 	"strings"
+
+	"github.com/t94j0/array"
 )
 
 // Host declares host information
@@ -69,8 +71,8 @@ func (s Scan) GetHost(hostTarget string) (target Host, exists bool) {
 func (h Host) Rescan() (scan Scan) {
 	return Init().
 		AddPorts(h.parentScan.configPorts...).
-		AddTCPPorts(h.parentScan.configTCPPorts).
-		AddUDPPorts(h.parentScan.configUDPPorts).
+		AddTCPPorts(h.parentScan.configTCPPorts...).
+		AddUDPPorts(h.parentScan.configUDPPorts...).
 		AddHosts(h.Address).
 		AddFlags(h.parentScan.configOpts...)
 }
@@ -78,37 +80,20 @@ func (h Host) Rescan() (scan Scan) {
 // Diff gets the difference between the the target host and the argument host.
 //The first returned value is the added ports and the second returned value is
 // the removed ports.
-//
-// BUG(t94j0): Make diff'ing more efficient. (O(2) right now)
 func (h Host) Diff(altHost Host) (added []Port, removed []Port) {
 	targetPorts := h.Ports
 	altPorts := altHost.Ports
 
-	for _, altPort := range altPorts {
-		inTarget := false
-		for _, targetPort := range targetPorts {
-			if targetPort.ID == altPort.ID &&
-				targetPort.State == "open" && altPort.State == "open" {
-				inTarget = true
-			}
-		}
-
-		if !inTarget && altPort.State == "open" {
-			added = append(added, altPort)
+	addedWithClosed := array.Except(altPorts, targetPorts).([]Port)
+	for _, add := range addedWithClosed {
+		if add.State != "closed" {
+			added = append(added, add)
 		}
 	}
-
-	for _, targetPort := range targetPorts {
-		inAlt := false
-		for _, altPort := range altPorts {
-			if targetPort.ID == altPort.ID &&
-				targetPort.State == "open" && altPort.State == "open" {
-				inAlt = true
-			}
-		}
-
-		if !inAlt && targetPort.State == "open" {
-			removed = append(removed, targetPort)
+	removedWithClosed := array.Except(targetPorts, altPorts).([]Port)
+	for _, remove := range removedWithClosed {
+		if remove.State != "closed" {
+			removed = append(removed, remove)
 		}
 	}
 
