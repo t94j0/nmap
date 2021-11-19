@@ -11,6 +11,8 @@ type Port struct {
 	// ID is the port number
 	ID      uint32
 	State   string
+	Service string
+	Method  string
 	Scripts []Script
 }
 
@@ -32,6 +34,8 @@ func (port rawPort) cleanPort() Port {
 		port.Protocol,
 		port.Port,
 		port.State.State,
+		port.Service.Name,
+		port.Service.Method,
 		[]Script{},
 	}
 	for _, script := range port.Scripts {
@@ -48,7 +52,7 @@ func (port rawPort) cleanPort() Port {
 
 // ToString returns port information in a pretty-printed format
 func (p Port) ToString() (out string) {
-	out += fmt.Sprintf("Port %d/%s is %s\n", p.ID, p.Protocol, p.State)
+	out += fmt.Sprintf("Port %d/%s (%s) is %s\n", p.ID, p.Protocol, p.Service, p.State)
 	for _, script := range p.Scripts {
 		output := ""
 		for _, line := range strings.Split(script.Output, "\n") {

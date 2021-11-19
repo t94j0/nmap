@@ -103,6 +103,7 @@ type rawService struct {
 	xMLName xml.Name `xml:"service"`
 
 	Name        string `xml:"name,attr"`
+	Method      string `xml:"method,attr"`
 	Product     string `xml:"product"`
 	Fingerprint string `xml:"servicefp"`
 }

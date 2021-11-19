@@ -84,13 +84,19 @@ func (h Host) Diff(altHost Host) (added []Port, removed []Port) {
 	targetPorts := h.Ports
 	altPorts := altHost.Ports
 
-	addedWithClosed := array.Except(altPorts, targetPorts).([]Port)
+	addedWithClosed, ok := array.Except(altPorts, targetPorts).([]Port)
+	if !ok {
+		return
+	}
 	for _, add := range addedWithClosed {
 		if add.State != "closed" {
 			added = append(added, add)
 		}
 	}
-	removedWithClosed := array.Except(targetPorts, altPorts).([]Port)
+	removedWithClosed, ok := array.Except(targetPorts, altPorts).([]Port)
+	if !ok {
+		return
+	}
 	for _, remove := range removedWithClosed {
 		if remove.State != "closed" {
 			removed = append(removed, remove)
